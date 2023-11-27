@@ -3,7 +3,22 @@
 version: '3.4'
 
 services:
+  mongoclient:
+    container_name: mongoclient
+    image: mongoclient/mongoclient
+    ports:
+      - 3000:3000
+    volumes:
+      - mongoclient:/data/db
+  catalogdb:
+    container_name: catalogdb
+    restart: always
+    ports:
+    - 27017:27017
+    volumes:
+      - mongo_data:/data/db
   catalogapi:
+    container_name: catalogapi
     image: catalogapi
     build:
       context: .
@@ -11,8 +26,13 @@ services:
       args:
         - configuration=Debug
     ports:
-      - 5194:5194
+      - 8000:8080
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - DatabaseSettings__ConnectionString=mongodb://catalogdb:27017
+    depends_on:
+      - catalogdb
     volumes:
       - ~/.vsdbg:/remote_debugger:rw
+volumes:
+  mongoclient:
