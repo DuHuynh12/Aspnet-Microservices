@@ -3,6 +3,15 @@
 version: '3.4'
 
 services:
+  portainer:
+    container_name: portainer
+    restart: always
+    ports:
+    - 9000:8000
+    - 9443:9443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
   mongoclient:
     container_name: mongoclient
     image: mongoclient/mongoclient
@@ -34,5 +43,32 @@ services:
       - catalogdb
     volumes:
       - ~/.vsdbg:/remote_debugger:rw
+  basketdb:
+    container_name: basketdb
+    restart: always
+    ports:
+    - 6379:6379
+  basketapi:
+    container_name: basketapi
+    image: basketapi
+    build:
+      context: .
+      dockerfile: Services/Basket/Basket.API/Dockerfile
+      args:
+        - configuration=Debug
+    ports:
+      - 8001:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CacheSettings__ConnectionString=basketdb:6379
+    depends_on:
+      - basketdb
+  discountdb:
+    container_name: discountdb
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - discount_data:/var/lib/postgresql/data
 volumes:
   mongoclient:
